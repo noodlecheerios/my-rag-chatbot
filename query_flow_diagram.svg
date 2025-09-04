@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for better visual appeal -->
+    <linearGradient id="frontendGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#45a049;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9800;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F57C00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#9C27B0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7B1FA2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Title -->
+  <text x="600" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#333">
+    RAG System Query Processing Flow
+  </text>
+  
+  <!-- Frontend Section -->
+  <rect x="50" y="60" width="200" height="120" rx="10" fill="url(#frontendGrad)" stroke="#333" stroke-width="2"/>
+  <text x="150" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    FRONTEND
+  </text>
+  <text x="150" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    script.js
+  </text>
+  <text x="150" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    sendMessage()
+  </text>
+  <text x="150" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    POST /api/query
+  </text>
+  <text x="150" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    {query, session_id}
+  </text>
+
+  <!-- API Gateway -->
+  <rect x="350" y="60" width="180" height="120" rx="10" fill="url(#backendGrad)" stroke="#333" stroke-width="2"/>
+  <text x="440" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    API GATEWAY
+  </text>
+  <text x="440" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    app.py
+  </text>
+  <text x="440" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    /api/query endpoint
+  </text>
+  <text x="440" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Create session if needed
+  </text>
+  <text x="440" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Call rag_system.query()
+  </text>
+
+  <!-- RAG System -->
+  <rect x="630" y="60" width="180" height="120" rx="10" fill="url(#backendGrad)" stroke="#333" stroke-width="2"/>
+  <text x="720" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    RAG SYSTEM
+  </text>
+  <text x="720" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    rag_system.py
+  </text>
+  <text x="720" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Process query
+  </text>
+  <text x="720" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Get conversation history
+  </text>
+  <text x="720" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Call AI generator
+  </text>
+
+  <!-- Session Manager -->
+  <rect x="900" y="60" width="150" height="80" rx="10" fill="#607D8B" stroke="#333" stroke-width="2"/>
+  <text x="975" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">
+    SESSION MGR
+  </text>
+  <text x="975" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    session_manager.py
+  </text>
+  <text x="975" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    History tracking
+  </text>
+
+  <!-- AI Generator -->
+  <rect x="350" y="250" width="200" height="120" rx="10" fill="url(#aiGrad)" stroke="#333" stroke-width="2"/>
+  <text x="450" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    AI GENERATOR
+  </text>
+  <text x="450" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    ai_generator.py
+  </text>
+  <text x="450" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Claude API call
+  </text>
+  <text x="450" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Tool execution logic
+  </text>
+  <text x="450" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Response generation
+  </text>
+
+  <!-- Tool Manager -->
+  <rect x="630" y="250" width="180" height="120" rx="10" fill="#795548" stroke="#333" stroke-width="2"/>
+  <text x="720" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    TOOL MANAGER
+  </text>
+  <text x="720" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    search_tools.py
+  </text>
+  <text x="720" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    CourseSearchTool
+  </text>
+  <text x="720" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Execute search
+  </text>
+  <text x="720" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Track sources
+  </text>
+
+  <!-- Vector Store -->
+  <rect x="350" y="450" width="200" height="120" rx="10" fill="url(#dbGrad)" stroke="#333" stroke-width="2"/>
+  <text x="450" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    VECTOR STORE
+  </text>
+  <text x="450" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">
+    vector_store.py
+  </text>
+  <text x="450" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    ChromaDB search
+  </text>
+  <text x="450" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Semantic matching
+  </text>
+  <text x="450" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    Return relevant docs
+  </text>
+
+  <!-- Document Store -->
+  <rect x="630" y="450" width="180" height="120" rx="10" fill="#607D8B" stroke="#333" stroke-width="2"/>
+  <text x="720" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">
+    DOCUMENT STORE
+  </text>
+  <text x="720" y="495" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    ChromaDB Database
+  </text>
+  <text x="720" y="515" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    Course chunks</text>
+  <text x="720" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    Embeddings</text>
+  <text x="720" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+    Metadata</text>
+
+  <!-- Arrows with labels -->
+  
+  <!-- 1. Frontend to API -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+  </defs>
+  
+  <line x1="250" y1="120" x2="350" y2="120" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="300" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">1. HTTP POST</text>
+  
+  <!-- 2. API to RAG -->
+  <line x1="530" y1="120" x2="630" y2="120" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="580" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">2. query()</text>
+  
+  <!-- 3. RAG to Session -->
+  <line x1="810" y1="100" x2="900" y2="100" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="855" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">3. get_history()</text>
+  
+  <!-- 4. RAG to AI Generator -->
+  <line x1="700" y1="180" x2="470" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="585" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">4. generate_response()</text>
+  
+  <!-- 5. AI to Tool Manager -->
+  <line x1="550" y1="310" x2="630" y2="310" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="590" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">5. tool_use</text>
+  
+  <!-- 6. Tool Manager to Vector Store -->
+  <line x1="700" y1="370" x2="470" y2="450" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="585" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">6. search()</text>
+  
+  <!-- 7. Vector Store to Document Store -->
+  <line x1="550" y1="510" x2="630" y2="510" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="590" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">7. query_db</text>
+  
+  <!-- Return arrows (dashed) -->
+  <line x1="630" y1="530" x2="550" y2="530" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="590" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">results</text>
+  
+  <line x1="630" y1="330" x2="550" y2="330" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="590" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">formatted_results</text>
+  
+  <line x1="430" y1="250" x2="740" y2="180" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="585" y="225" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">AI response</text>
+  
+  <line x1="630" y1="140" x2="530" y2="140" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="580" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">answer + sources</text>
+  
+  <line x1="350" y1="140" x2="250" y2="140" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="300" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">JSON response</text>
+
+  <!-- Data Flow Labels -->
+  <rect x="50" y="650" width="300" height="200" rx="10" fill="#f9f9f9" stroke="#333" stroke-width="1"/>
+  <text x="200" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+    Data Flow Summary
+  </text>
+  
+  <text x="60" y="700" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    1. User types query → Frontend
+  </text>
+  <text x="60" y="720" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    2. POST /api/query → API Gateway  
+  </text>
+  <text x="60" y="740" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    3. Create/get session → Session Manager
+  </text>
+  <text x="60" y="760" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    4. Process query → RAG System
+  </text>
+  <text x="60" y="780" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    5. Generate with tools → AI Generator
+  </text>
+  <text x="60" y="800" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    6. Execute search → Tool Manager
+  </text>
+  <text x="60" y="820" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    7. Query vectors → Vector Store
+  </text>
+  <text x="60" y="840" font-family="Arial, sans-serif" font-size="12" fill="#333">
+    8. Return formatted response → Frontend
+  </text>
+
+  <!-- Response Format -->
+  <rect x="400" y="650" width="350" height="200" rx="10" fill="#f0f8ff" stroke="#333" stroke-width="1"/>
+  <text x="575" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+    Response Format
+  </text>
+  
+  <text x="410" y="700" font-family="Monaco, monospace" font-size="11" fill="#333">
+    {
+  </text>
+  <text x="420" y="720" font-family="Monaco, monospace" font-size="11" fill="#333">
+    "answer": "AI generated response...",
+  </text>
+  <text x="420" y="740" font-family="Monaco, monospace" font-size="11" fill="#333">
+    "sources": [
+  </text>
+  <text x="430" y="760" font-family="Monaco, monospace" font-size="11" fill="#333">
+    "Course 1 - Lesson 2",
+  </text>
+  <text x="430" y="780" font-family="Monaco, monospace" font-size="11" fill="#333">
+    "Course 3 - Lesson 1"
+  </text>
+  <text x="420" y="800" font-family="Monaco, monospace" font-size="11" fill="#333">
+    ],
+  </text>
+  <text x="420" y="820" font-family="Monaco, monospace" font-size="11" fill="#333">
+    "session_id": "unique_session_id"
+  </text>
+  <text x="410" y="840" font-family="Monaco, monospace" font-size="11" fill="#333">
+    }
+  </text>
+
+  <!-- Legend -->
+  <rect x="800" y="650" width="350" height="200" rx="10" fill="#fff8dc" stroke="#333" stroke-width="1"/>
+  <text x="975" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+    Component Legend
+  </text>
+  
+  <rect x="810" y="690" width="15" height="15" fill="url(#frontendGrad)"/>
+  <text x="835" y="702" font-family="Arial, sans-serif" font-size="11" fill="#333">Frontend (HTML/JS)</text>
+  
+  <rect x="810" y="710" width="15" height="15" fill="url(#backendGrad)"/>
+  <text x="835" y="722" font-family="Arial, sans-serif" font-size="11" fill="#333">Backend Services (Python)</text>
+  
+  <rect x="810" y="730" width="15" height="15" fill="url(#aiGrad)"/>
+  <text x="835" y="742" font-family="Arial, sans-serif" font-size="11" fill="#333">AI/ML Components</text>
+  
+  <rect x="810" y="750" width="15" height="15" fill="url(#dbGrad)"/>
+  <text x="835" y="762" font-family="Arial, sans-serif" font-size="11" fill="#333">Database/Storage</text>
+  
+  <rect x="810" y="770" width="15" height="15" fill="#607D8B"/>
+  <text x="835" y="782" font-family="Arial, sans-serif" font-size="11" fill="#333">Utility Services</text>
+  
+  <line x1="810" y1="800" x2="840" y2="800" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="850" y="805" font-family="Arial, sans-serif" font-size="11" fill="#333">Request flow</text>
+  
+  <line x1="810" y1="820" x2="840" y2="820" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="850" y="825" font-family="Arial, sans-serif" font-size="11" fill="#333">Response flow</text>
+</svg>
