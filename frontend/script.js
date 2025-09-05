@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, themeToggle;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,8 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
     newChatButton = document.getElementById('newChatButton');
+    themeToggle = document.getElementById('themeToggle');
     
     setupEventListeners();
+    initializeTheme();
     createNewSession();
     loadCourseStats();
 });
@@ -32,6 +34,9 @@ function setupEventListeners() {
     
     // New Chat button
     newChatButton.addEventListener('click', clearChatAndStartNew);
+    
+    // Theme toggle
+    themeToggle.addEventListener('click', toggleTheme);
     
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
@@ -234,5 +239,39 @@ async function loadCourseStats() {
         if (courseTitles) {
             courseTitles.innerHTML = '<span class="error">Failed to load courses</span>';
         }
+    }
+}
+
+// Theme Functions
+function initializeTheme() {
+    // Check if user has a saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.body.setAttribute('data-theme', savedTheme);
+    } else {
+        // Check system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (!prefersDark) {
+            document.body.setAttribute('data-theme', 'light');
+        }
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    // Apply new theme
+    if (newTheme === 'dark') {
+        document.body.removeAttribute('data-theme');
+    } else {
+        document.body.setAttribute('data-theme', newTheme);
+    }
+    
+    // Save user preference
+    if (newTheme === 'dark') {
+        localStorage.removeItem('theme');
+    } else {
+        localStorage.setItem('theme', newTheme);
     }
 }
