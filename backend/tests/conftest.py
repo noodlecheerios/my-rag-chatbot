@@ -2,6 +2,9 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch
 import sys
 import os
+from fastapi.testclient import TestClient
+import tempfile
+import shutil
 
 # Add the backend directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -110,7 +113,7 @@ def mock_anthropic_response():
     response = Mock()
     response.stop_reason = "end_turn"  # or "tool_use" for tool calling scenarios
     response.content = [Mock()]
-    response.content[0].text = "This is a mock AI response."
+    response.content[0].text = "This is a mock AI response about MCP architecture."
     response.content[0].type = "text"
     return response
 
@@ -166,6 +169,159 @@ def rag_system(mock_config, mock_vector_store, tool_manager):
         rag = RAGSystem(mock_config)
         rag.tool_manager = tool_manager
         return rag
+
+
+@pytest.fixture
+def mock_rag_system(mock_config, mock_vector_store, tool_manager):
+    """Mock RAGSystem for testing"""
+    with patch('rag_system.VectorStore') as mock_vector_store_class, \
+         patch('rag_system.AIGenerator') as mock_ai_generator_class, \
+         patch('rag_system.SessionManager') as mock_session_manager_class, \
+         patch('rag_system.DocumentProcessor') as mock_doc_processor_class:
+        
+        # Mock the dependencies
+        mock_vector_store_class.return_value = mock_vector_store
+        
+        mock_ai_gen = Mock()
+        mock_ai_gen.generate_with_tools.return_value = (
+            "This is a test response about MCP architecture.", 
+            ["source1", "source2"]
+        )
+        mock_ai_generator_class.return_value = mock_ai_gen
+        
+        mock_session_mgr = Mock()
+        mock_session_mgr.create_session.return_value = "test-session-123"
+        mock_session_mgr.get_session_history.return_value = []
+        mock_session_manager_class.return_value = mock_session_mgr
+        
+        mock_doc_processor_class.return_value = Mock()
+        
+        rag = RAGSystem(mock_config)
+        rag.tool_manager = tool_manager
+        
+        # Mock the query method
+        rag.query = Mock(return_value=("Test response", ["source1", "source2"]))
+        rag.get_course_analytics = Mock(return_value={
+            "total_courses": 2,
+            "course_titles": ["MCP: Build Rich-Context AI Apps", "Another Course"]
+        })
+        
+        return rag
+
+
+@pytest.fixture
+def temp_frontend_dir():
+    """Create a temporary frontend directory for testing static files"""
+    temp_dir = tempfile.mkdtemp()
+    frontend_dir = os.path.join(temp_dir, "frontend")
+    os.makedirs(frontend_dir)
+    
+    # Create a simple index.html for testing
+    with open(os.path.join(frontend_dir, "index.html"), "w") as f:
+        f.write("<html><body><h1>Test Frontend</h1></body></html>")
+    
+    yield frontend_dir
+    shutil.rmtree(temp_dir)
+
+
+@pytest.fixture
+def test_app(mock_rag_system, temp_frontend_dir):
+    """Create a FastAPI test app with mocked dependencies"""
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.middleware.trustedhost import TrustedHostMiddleware
+    from pydantic import BaseModel
+    from typing import List, Optional, Any
+    
+    # Create test app without static files that don't exist
+    app = FastAPI(title="Course Materials RAG System", root_path="")
+    
+    # Add middleware
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*"]
+    )
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+    
+    # Pydantic models
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+    
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[Any]
+        session_id: str
+    
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+    
+    class ClearSessionRequest(BaseModel):
+        session_id: str
+    
+    class ClearSessionResponse(BaseModel):
+        success: bool
+        message: str
+    
+    # API endpoints
+    @app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        try:
+            session_id = request.session_id or "test-session-123"
+            answer, sources = mock_rag_system.query(request.query, session_id)
+            return QueryResponse(
+                answer=answer,
+                sources=sources,
+                session_id=session_id
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        try:
+            analytics = mock_rag_system.get_course_analytics()
+            return CourseStats(
+                total_courses=analytics["total_courses"],
+                course_titles=analytics["course_titles"]
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @app.post("/api/clear-session", response_model=ClearSessionResponse)
+    async def clear_session(request: ClearSessionRequest):
+        try:
+            # Mock clearing session
+            return ClearSessionResponse(
+                success=True,
+                message=f"Session {request.session_id} cleared successfully"
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    # Mount static files for testing
+    app.mount("/", StaticFiles(directory=temp_frontend_dir, html=True), name="static")
+    
+    return app
+
+
+@pytest.fixture
+def client(test_app):
+    """FastAPI test client"""
+    return TestClient(test_app)
 
 
 @pytest.fixture(autouse=True)
