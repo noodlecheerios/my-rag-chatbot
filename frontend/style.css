@@ -911,9 +911,6 @@ body:not([data-theme]) .theme-toggle .moon-icon {
 }
 
 /* Position both icons absolutely so they overlap */
-.theme-toggle {
-    position: relative;
-}
 
 .theme-toggle .sun-icon,
 .theme-toggle .moon-icon {
