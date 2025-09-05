@@ -5,28 +5,42 @@ class AIGenerator:
     """Handles interactions with Anthropic's Claude API for generating responses"""
     
     # Static system prompt to avoid rebuilding on each call
-    SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to a comprehensive search tool for course information.
+    SYSTEM_PROMPT = """ You are an AI assistant with access to course information tools. 
 
-Search Tool Usage:
-- Use the search tool **only** for questions about specific course content or detailed educational materials
-- **One search per query maximum**
-- Synthesize search results into accurate, fact-based responses
-- If search yields no results, state this clearly without offering alternatives
+TOOL USAGE CAPABILITIES:
+- You can make multiple tool calls across up to 2 separate rounds
+- After seeing tool results, you can decide to use tools again if needed
+- Use this for complex queries requiring multiple searches or follow-up investigations
 
-Response Protocol:
-- **General knowledge questions**: Answer using existing knowledge without searching
-- **Course-specific questions**: Search first, then answer
-- **No meta-commentary**:
- - Provide direct answers only — no reasoning process, search explanations, or question-type analysis
- - Do not mention "based on the search results"
+CRITICAL TOOL USAGE RULES:
+1. **get_course_outline** - Use for ANY question about:
+   - Course outlines, syllabi, lessons, structure, content overview
+   - Examples: "What lessons are in X?", "Show course outline", "What does X course cover?"
 
+2. **search_course_content** - Use for specific content questions:
+   - Implementation details, explanations, specific topics
+   - Examples: "How do I implement X?", "Explain concept Y"
 
-All responses must be:
-1. **Brief, Concise and focused** - Get to the point quickly
-2. **Educational** - Maintain instructional value
-3. **Clear** - Use accessible language
-4. **Example-supported** - Include relevant examples when they aid understanding
-Provide only the direct answer to what was asked.
+MULTI-ROUND EXAMPLES:
+- Round 1: Get course outline → Round 2: Search specific lesson content
+- Round 1: Search broad topic → Round 2: Search refined/related topic
+- Round 1: Get course info → Round 2: Search specific implementation details
+
+**MANDATORY TOOL USAGE:**
+- If the user mentions a course name AND asks about structure/lessons/outline → use get_course_outline
+- If the user mentions a course name AND asks about specific content → use search_course_content
+- DO NOT answer course questions without using tools
+- DO NOT rely on your training knowledge for course-specific information
+- Make tool calls when you need more information
+- You have 2 rounds maximum to gather all needed information
+
+**Response format:**
+Use tools first, then provide a clear answer based on the tool results only.
+
+**IMPORTANT for course outlines:**
+- ALWAYS include the course link in your response when provided by the tool
+- Format: "Course Link: [URL]" or "Available at: [URL]"
+- Include instructor information when available
 """
     
     def __init__(self, api_key: str, model: str):
@@ -81,55 +95,176 @@ Provide only the direct answer to what was asked.
         
         # Handle tool execution if needed
         if response.stop_reason == "tool_use" and tool_manager:
-            return self._handle_tool_execution(response, api_params, tool_manager)
+            return self._execute_tool_calling_rounds(response, api_params, tool_manager)
         
         # Return direct response
         return response.content[0].text
     
-    def _handle_tool_execution(self, initial_response, base_params: Dict[str, Any], tool_manager):
+    def _execute_tool_calling_rounds(self, initial_response, base_params: Dict[str, Any], tool_manager, max_rounds: int = 2):
         """
-        Handle execution of tool calls and get follow-up response.
+        Execute sequential rounds of tool calling with Claude.
         
         Args:
-            initial_response: The response containing tool use requests
+            initial_response: The response containing initial tool use requests
             base_params: Base API parameters
+            tool_manager: Manager to execute tools
+            max_rounds: Maximum number of tool calling rounds (default: 2)
+            
+        Returns:
+            Final response text after all tool execution rounds
+        """
+        messages = base_params["messages"].copy()
+        current_response = initial_response
+        current_round = 0
+        
+        while current_round < max_rounds:
+            # Add Claude's response (including tool calls) to conversation
+            messages.append({"role": "assistant", "content": current_response.content})
+            
+            # Execute tools in current response
+            tool_results, execution_success = self._execute_tools_in_response(current_response, tool_manager)
+            
+            if not execution_success:
+                # Critical tool failure - return best effort response
+                return self._handle_tool_execution_failure(messages, tool_results, base_params)
+            
+            # Add tool results to conversation
+            if tool_results:
+                messages.append({"role": "user", "content": tool_results})
+            
+            current_round += 1
+            
+            # Get next response from Claude (WITH tools still available)
+            next_response = self._get_next_response(messages, base_params)
+            
+            # Check if we should continue tool calling
+            if not self._should_continue_tool_calling(next_response, current_round, max_rounds):
+                return next_response.content[0].text
+            
+            # Prepare for next round
+            current_response = next_response
+        
+        # Max rounds reached - get final response without tools
+        return self._get_final_response(messages, base_params)
+    
+    def _execute_tools_in_response(self, response, tool_manager):
+        """
+        Execute all tools in response with comprehensive error handling.
+        
+        Args:
+            response: The response containing tool use blocks
             tool_manager: Manager to execute tools
             
         Returns:
-            Final response text after tool execution
+            Tuple of (tool_results, success_flag)
         """
-        # Start with existing messages
-        messages = base_params["messages"].copy()
-        
-        # Add AI's tool use response
-        messages.append({"role": "assistant", "content": initial_response.content})
-        
-        # Execute all tool calls and collect results
         tool_results = []
-        for content_block in initial_response.content:
+        critical_failure = False
+        
+        for content_block in response.content:
             if content_block.type == "tool_use":
-                tool_result = tool_manager.execute_tool(
-                    content_block.name, 
-                    **content_block.input
-                )
-                
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": content_block.id,
-                    "content": tool_result
-                })
+                try:
+                    result = tool_manager.execute_tool(
+                        content_block.name, 
+                        **content_block.input
+                    )
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": content_block.id,
+                        "content": result
+                    })
+                    
+                except Exception as e:
+                    error_msg = f"Tool execution failed: {str(e)}"
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": content_block.id,
+                        "content": error_msg
+                    })
+                    critical_failure = True
         
-        # Add tool results as single message
-        if tool_results:
-            messages.append({"role": "user", "content": tool_results})
+        return tool_results, not critical_failure
+    
+    def _should_continue_tool_calling(self, response, current_round: int, max_rounds: int) -> bool:
+        """
+        Determine if tool calling should continue.
         
-        # Prepare final API call without tools
+        Args:
+            response: The response to check
+            current_round: Current round number
+            max_rounds: Maximum allowed rounds
+            
+        Returns:
+            True if tool calling should continue, False otherwise
+        """
+        # Stop if max rounds reached
+        if current_round >= max_rounds:
+            return False
+            
+        # Check if response contains tool calls
+        has_tool_calls = any(
+            block.type == "tool_use" 
+            for block in response.content
+        )
+        
+        return has_tool_calls
+    
+    def _get_next_response(self, messages, base_params):
+        """
+        Get next response from Claude with tools still available.
+        
+        Args:
+            messages: Current conversation messages
+            base_params: Base API parameters
+            
+        Returns:
+            Claude's response
+        """
+        api_params = {
+            **self.base_params,
+            "messages": messages,
+            "system": base_params["system"],
+            "tools": base_params.get("tools"),
+            "tool_choice": {"type": "auto"}
+        }
+        
+        return self.client.messages.create(**api_params)
+    
+    def _get_final_response(self, messages, base_params):
+        """
+        Get final response without tools for clean termination.
+        
+        Args:
+            messages: Current conversation messages
+            base_params: Base API parameters
+            
+        Returns:
+            Final response text
+        """
         final_params = {
             **self.base_params,
             "messages": messages,
             "system": base_params["system"]
         }
         
-        # Get final response
         final_response = self.client.messages.create(**final_params)
         return final_response.content[0].text
+    
+    def _handle_tool_execution_failure(self, messages, failed_results, base_params):
+        """
+        Generate best-effort response when tools fail.
+        
+        Args:
+            messages: Current conversation messages
+            failed_results: Tool results including failures
+            base_params: Base API parameters
+            
+        Returns:
+            Best-effort response text
+        """
+        # Add failed results to context
+        if failed_results:
+            messages.append({"role": "user", "content": failed_results})
+        
+        # Get response without tools
+        return self._get_final_response(messages, base_params)
