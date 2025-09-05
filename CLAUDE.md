@@ -32,10 +32,25 @@ uv run python script.py
 uv run module_name
 ```
 
-### Development Commands
+### Code Quality Tools
 ```bash
-# No test suite, linting, or formatting tools configured
-# This project uses direct uv dependency management without additional dev tools
+# Format code (black + isort)
+./format.sh
+
+# Check linting (flake8)
+./lint.sh
+
+# Run type checking (mypy) 
+./typecheck.sh
+
+# Run all quality checks
+./quality-check.sh
+
+# Manual commands
+black backend/ --line-length 120    # Format code
+isort backend/                       # Sort imports  
+flake8 backend/                      # Lint code
+mypy backend/                        # Type check
 ```
 
 ### Environment Setup
